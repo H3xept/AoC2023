@@ -117,29 +117,78 @@ bool isGamePossible(BagConfig *config, std::vector<BagConfig> const &sets) {
   return true;
 }
 
+// If you are a recruiter, lmao sorry it has been a long day
+// Duplication goes brrr
+uint64_t highest_r(std::vector<BagConfig> extractions) {
+    uint64_t max = 0;
+    for (uint64_t i = 0; i < extractions.size(); i++) 
+        max = std::max(max, extractions[i].r);
+    return max;
+}
+
+uint64_t highest_g(std::vector<BagConfig> extractions) {
+    uint64_t max = 0;
+    for (uint64_t i = 0; i < extractions.size(); i++) 
+        max = std::max(max, extractions[i].g);
+    return max;
+}
+
+uint64_t highest_b(std::vector<BagConfig> extractions) {
+    uint64_t max = 0;
+    for (uint64_t i = 0; i < extractions.size(); i++) 
+        max = std::max(max, extractions[i].b);
+    return max;
+}
+
+void ppextraction(BagConfig* extraction) {
+    printf("r: %llu, g: %llu, b: %llu\n",
+        extraction->r,
+        extraction->g,
+        extraction->b
+        );
+}
+
 void ppgame(Game *game) {
   printf("#%llu: ", game->id);
-  for (uint64_t i = 0; i < game->extractions.size() - 1; ++i)
-    printf("\t%llu> r: %llu, g: %llu, b: %llu\n",
-        i,
-        game->extractions[i].r,
-        game->extractions[i].g,
-        game->extractions[i].b
-    );
+  for (uint64_t i = 0; i < game->extractions.size() - 1; ++i) { 
+      printf("\t%llu>", i); 
+      ppextraction(&game->extractions[i]);
+  }
+}
+
+BagConfig max_extraction(Game* game) {
+    return BagConfig {
+        .r = highest_r(game->extractions),
+        .g = highest_g(game->extractions),
+        .b = highest_b(game->extractions),
+    };
+}
+
+uint64_t set_power(BagConfig* config) {
+    return config->r*config->g*config->b;
 }
 
 int main(int argc, char **argv) {
   std::ifstream in = read(argv[1]);
   BagConfig bagConfig = parseConfig(argv[2]);
   uint64_t id_sum = 0;
+  uint64_t power_sum = 0;
+
   while (in.peek() != EOF) {
     std::string line;
     std::getline(in, line);
     Game game = parseGame(line);
     ppgame(&game);
     id_sum += isGamePossible(&bagConfig, game.extractions) ? game.id : 0;
+    BagConfig max_extr = max_extraction(&game);
+    printf("Max: ");
+    ppextraction(&max_extr);
+    uint64_t power = set_power(&max_extr);
+    printf("Power: %llu\n", power);
+    power_sum += power; 
   }
 
   printf("Sum of all possible games: %llu\n", id_sum);
+  printf("Sum of all minimum set powers %llu\n", power_sum);
   return 0;
 }
